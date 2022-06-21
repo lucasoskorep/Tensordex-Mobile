@@ -2,10 +2,9 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:image/image.dart' as image_lib;
-import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:tensordex_mobile/utils/logger.dart';
 
-import 'logger.dart';
 
 /// ImageUtils
 class ImageUtils {
