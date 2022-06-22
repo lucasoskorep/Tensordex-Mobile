@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
 import 'package:tensordex_mobile/ui/poke_view.dart';
+import 'package:tensordex_mobile/ui/results_view.dart';
 
 import '../utils/logger.dart';
 import '../utils/recognition.dart';
@@ -25,7 +25,6 @@ class TensordexHome extends StatefulWidget {
 }
 
 class _TensordexHomeState extends State<TensordexHome> {
-  int _counter = 0;
 
   /// Results to draw bounding boxes
   List<Recognition>? results;
@@ -38,7 +37,6 @@ class _TensordexHomeState extends State<TensordexHome> {
 
   void _incrementCounter() {
     setState(() {
-      _counter++;
       logger.d("Counter Incremented!");
       logger.w("Counter Incremented!");
       logger.e("Counter Incremented!");
@@ -129,8 +127,6 @@ class _TensordexHomeState extends State<TensordexHome> {
 
   @override
   void dispose() {
-    // controller.dispose();
-    // WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -158,17 +154,10 @@ class _TensordexHomeState extends State<TensordexHome> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const Text(
-                'You have pushed the button this many times:',
-              ),
-              Text(
-                '$_counter',
-                style: Theme.of(context).textTheme.headline4,
-              ),
               CameraView(
                   resultsCallback: resultsCallback,
-                  statsCallback: statsCallback
-              ),
+                  statsCallback: statsCallback),
+              const ResultsView(),
             ],
           ),
         ),

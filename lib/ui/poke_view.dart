@@ -2,6 +2,9 @@ import 'dart:isolate';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:tensordex_mobile/tflite/classifier.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:tensordex_mobile/utils/image_utils.dart';
 
 import '../utils/logger.dart';
 import '../utils/recognition.dart';
@@ -30,9 +33,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   /// Controller
   late CameraController cameraController;
+  Interpreter? interp;
 
   /// true when inference is ongoing
   bool predicting = false;
+
+  late Classifier classy;
 
   // /// Instance of [Classifier]
   // Classifier classifier;
@@ -56,8 +62,27 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // Camera initialization
     initializeCamera();
 
+    // final gpuDelegateV2 = GpuDelegateV2(
+    //     options: GpuDelegateOptionsV2(
+    //       isPrecisionLossAllowed: false,
+    //       inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
+    //       inferencePriority1: TfLiteGpuInferencePriority.minLatency,
+    //       inferencePriority2: TfLiteGpuInferencePriority.auto,
+    //       inferencePriority3: TfLiteGpuInferencePriority.auto,
+    //     ));
+
+
+    logger.e("CREATING THE INTERPRETOR");
+    var interpreterOptions = InterpreterOptions();//..addDelegate(gpuDelegateV2);
+    interp = await Interpreter.fromAsset('efficientnet_v2s.tflite',
+        options: interpreterOptions);
+    logger.e("CREATING THE INTERPRETOR");
+
+    classy = Classifier(interpreter: interp);
+    logger.i(interp?.getOutputTensors());
     // Create an instance of classifier to load model and labels
     // classifier = Classifier();
+
 
     // Initially predicting = false
     predicting = false;
@@ -94,7 +119,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     // Return empty container while the camera is not initialized
-    if (!cameraController.value.isInitialized || cameraController == null) {
+    if (!cameraController.value.isInitialized) {
       return Container();
     }
 
@@ -114,6 +139,16 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       predicting = true;
     });
     logger.i("RECIEVED IMAGE");
+    logger.i(cameraImage.format.group);
+    logger.i(cameraImage);
+    var converted = ImageUtils.convertCameraImage(cameraImage);
+    if (converted != null){
+
+      var result = classy.predict(converted);
+
+      logger.e("PREDICTED IMAGE");
+      logger.i(result);
+    }
     // logger.i(cameraImage);
     // logger.i(cameraImage.height);
     // logger.i(cameraImage.width);
