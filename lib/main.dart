@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tensordex_mobile/ui/tensordex_home.dart';
+import 'package:tensordex_mobile/widgets/tensordex_home.dart';
 import 'package:tensordex_mobile/utils/logger.dart';
 
 Future<void> main() async {

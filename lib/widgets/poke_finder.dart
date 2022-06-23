@@ -10,8 +10,8 @@ import '../utils/logger.dart';
 import '../tflite/data/recognition.dart';
 import '../tflite/data/stats.dart';
 
-/// [PokedexView] sends each frame for inference
-class PokedexView extends StatefulWidget {
+/// [PokeFinder] sends each frame for inference
+class PokeFinder extends StatefulWidget {
   /// Callback to pass results after inference to [HomeView]
   final Function(List<Recognition> recognitions) resultsCallback;
 
@@ -19,15 +19,15 @@ class PokedexView extends StatefulWidget {
   final Function(Stats stats) statsCallback;
 
   /// Constructor
-  const PokedexView(
+  const PokeFinder(
       {Key? key, required this.resultsCallback, required this.statsCallback})
       : super(key: key);
 
   @override
-  State<PokedexView> createState() => _PokedexViewState();
+  State<PokeFinder> createState() => _PokeFinderState();
 }
 
-class _PokedexViewState extends State<PokedexView> with WidgetsBindingObserver {
+class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
   late List<CameraDescription> cameras;
   late CameraController cameraController;
   late MLIsolate _mlIsolate;

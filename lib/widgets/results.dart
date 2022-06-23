@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:tensordex_mobile/ui/poke_view.dart';
+import 'package:tensordex_mobile/widgets/poke_finder.dart';
 import 'package:tensordex_mobile/tflite/data/recognition.dart';
 import 'package:tensordex_mobile/tflite/data/stats.dart';
 
 
-/// [PokedexView] sends each frame for inference
-class ResultsView extends StatefulWidget {
+/// [PokeFinder] sends each frame for inference
+class Results extends StatefulWidget {
   final List<Recognition> recognitions;
   final Stats stats;
   /// Constructor
-  const ResultsView(this.recognitions, this.stats, {Key? key}) : super(key: key);
+  const Results(this.recognitions, this.stats, {Key? key}) : super(key: key);
 
   @override
-  State<ResultsView> createState() => _ResultsViewState();
+  State<Results> createState() => _ResultsState();
 }
 
-class _ResultsViewState extends State<ResultsView> {
+class _ResultsState extends State<Results> {
   @override
   void initState() {
     super.initState();

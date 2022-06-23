@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tensordex_mobile/ui/poke_view.dart';
-import 'package:tensordex_mobile/ui/results_view.dart';
+import 'package:tensordex_mobile/widgets/poke_finder.dart';
+import 'package:tensordex_mobile/widgets/results.dart';
 
 import '../utils/logger.dart';
 import '../tflite/data/recognition.dart';
@@ -44,14 +44,14 @@ class _TensordexHomeState extends State<TensordexHome> {
     super.dispose();
   }
 
-  /// Callback to get inference results from [PokedexView]
+  /// Callback to get inference results from [PokeFinder]
   void resultsCallback(List<Recognition> results) {
     setState(() {
       this.results = results;
     });
   }
 
-  /// Callback to get inference stats from [PokedexView]
+  /// Callback to get inference stats from [PokeFinder]
   void statsCallback(Stats stats) {
     setState(() {
       this.stats = stats;
@@ -68,10 +68,10 @@ class _TensordexHomeState extends State<TensordexHome> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              PokedexView(
+              PokeFinder(
                   resultsCallback: resultsCallback,
                   statsCallback: statsCallback),
-              ResultsView(results, stats),
+              Results(results, stats),
             ],
           ),
         ),
