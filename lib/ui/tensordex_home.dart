@@ -3,15 +3,11 @@ import 'package:tensordex_mobile/ui/poke_view.dart';
 import 'package:tensordex_mobile/ui/results_view.dart';
 
 import '../utils/logger.dart';
-import '../utils/recognition.dart';
-import '../utils/stats.dart';
+import '../tflite/data/recognition.dart';
+import '../tflite/data/stats.dart';
 
 class TensordexHome extends StatefulWidget {
   const TensordexHome({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
 
   // This class is the configuration for the state. It holds the values (in this
   // case the title) provided by the parent (in this case the App widget) and
@@ -25,12 +21,9 @@ class TensordexHome extends StatefulWidget {
 }
 
 class _TensordexHomeState extends State<TensordexHome> {
-
-  /// Results to draw bounding boxes
-  List<Recognition>? results;
-
-  /// Realtime stats
-  Stats? stats;
+  /// Results from the image classifier
+  List<Recognition> results = [Recognition(1, "NOTHING DETECTED", .5)];
+  Stats stats = Stats();
 
   /// Scaffold Key
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
@@ -38,106 +31,27 @@ class _TensordexHomeState extends State<TensordexHome> {
   void _incrementCounter() {
     setState(() {
       logger.d("Counter Incremented!");
-      logger.w("Counter Incremented!");
-      logger.e("Counter Incremented!");
     });
   }
 
-  // void onNewCameraSelected(CameraDescription cameraDescription) async {
-  //   final previousCameraController = controller;
-  //   // Instantiating the camera controller
-  //   final CameraController cameraController = CameraController(
-  //     cameraDescription,
-  //     ResolutionPreset.high,
-  //     imageFormatGroup: ImageFormatGroup.jpeg,
-  //   );
-  //
-  //   // Dispose the previous controller
-  //   await previousCameraController.dispose();
-  //
-  //   // Replace with the new controller
-  //   if (mounted) {
-  //     setState(() {
-  //       controller = cameraController;
-  //     });
-  //   }
-  //
-  //   // Update UI if controller updated
-  //   cameraController.addListener(() {
-  //     if (mounted) setState(() {});
-  //   });
-  //
-  //   // Initialize controller
-  //   try {
-  //     await cameraController.initialize();
-  //   } on CameraException catch (e) {
-  //     logger.e('Error initializing camera:', e);
-  //   }
-  //
-  //   // Update the Boolean
-  //   if (mounted) {
-  //     setState(() {
-  //       _isCameraInitialized = controller.value.isInitialized;
-  //     });
-  //   }
-  // }
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  // WidgetsBinding.instance.addObserver(this);
-
-  // controller = CameraController(_cameras[0], ResolutionPreset.max);
-  // controller.initialize().then((_) {
-  //   if (!mounted) {
-  //     return;
-  //   }
-  //
-  //   setState(() {onNewCameraSelected(_cameras[0]);});
-  // }).catchError((Object e) {
-  //   if (e is CameraException) {
-  //     switch (e.code) {
-  //       case 'CameraAccessDenied':
-  //         logger.w('User denied camera access.');
-  //         controller.initialize().then((_) {
-  //           if (!mounted) {
-  //             return;
-  //           }
-  //           setState(() {});
-  //         }).catchError((Object e) {
-  //           if (e is CameraException) {
-  //             switch (e.code) {
-  //               case 'CameraAccessDenied':
-  //                 logger.i('User denied camera access.');
-  //                 break;
-  //               default:
-  //                 logger.i('Handle other errors.');
-  //                 break;
-  //             }
-  //           }
-  //         });
-  //         break;
-  //       default:
-  //         logger.i('Handle other errors.');
-  //         break;
-  //     }
-  //   }
-  // });
-  // }
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void dispose() {
     super.dispose();
   }
 
-  /// Callback to get inference results from [CameraView]
+  /// Callback to get inference results from [PokedexView]
   void resultsCallback(List<Recognition> results) {
     setState(() {
       this.results = results;
     });
   }
 
-  /// Callback to get inference stats from [CameraView]
+  /// Callback to get inference stats from [PokedexView]
   void statsCallback(Stats stats) {
     setState(() {
       this.stats = stats;
@@ -152,12 +66,12 @@ class _TensordexHomeState extends State<TensordexHome> {
         ),
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              CameraView(
+              PokedexView(
                   resultsCallback: resultsCallback,
                   statsCallback: statsCallback),
-              const ResultsView(),
+              ResultsView(results, stats),
             ],
           ),
         ),
