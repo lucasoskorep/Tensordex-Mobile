@@ -5,7 +5,6 @@ import 'package:tensordex_mobile/tflite/classifier.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../utils/image_utils.dart';
-import '../utils/logger.dart';
 
 class IsolateBase {
   final ReceivePort _receivePort = ReceivePort();

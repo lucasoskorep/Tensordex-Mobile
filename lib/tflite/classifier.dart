@@ -30,7 +30,6 @@ class Classifier {
   late List<String> _labels;
   int classifierCreationStart = -1;
 
-
   Classifier({
     Interpreter? interpreter,
     List<String>? labels,
@@ -78,6 +77,7 @@ class Classifier {
       imageProcessor ??= ImageProcessorBuilder()
           .add(ResizeWithCropOrPadOp(224, 224))
           .add(ResizeOp(inputSize, inputSize, ResizeMethod.BILINEAR))
+          .add(NormalizeOp(0, 1))
           // .add(NormalizeOp(127.5, 127.5))
           .build();
       return imageProcessor?.process(inputImage);
@@ -93,9 +93,9 @@ class Classifier {
     var inferenceStart = DateTime.now().millisecondsSinceEpoch;
     _interpreter.run(_inputImage.buffer, _outputBuffer.getBuffer());
     var postProcStart = DateTime.now().millisecondsSinceEpoch;
-    Map<String, double> labeledProb = TensorLabel.fromList(
-            labels, _outputProcessor.process(_outputBuffer))
-        .getMapWithFloatValue();
+    Map<String, double> labeledProb =
+        TensorLabel.fromList(labels, _outputProcessor.process(_outputBuffer))
+            .getMapWithFloatValue();
     final predictions = getTopProbabilities(labeledProb, number: 5)
         .mapIndexed(
             (index, element) => Recognition(index, element.key, element.value))
@@ -111,6 +111,7 @@ class Classifier {
       ),
     };
   }
+
   /// Gets the interpreter instance
   Interpreter get interpreter => _interpreter;
 
