@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    logger.i("Building main app");
+    logger.i('Building main app');
     return MaterialApp(
       title: 'Tensordex',
       theme: ThemeData(

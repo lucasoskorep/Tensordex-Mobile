@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tensordex_mobile/widgets/poke_finder.dart';
-import 'package:tensordex_mobile/tflite/data/recognition.dart';
-import 'package:tensordex_mobile/tflite/data/stats.dart';
+import '../tflite/model/outputs/recognition.dart';
+import '../tflite/model/outputs/stats.dart';
 
 
 /// [PokeFinder] sends each frame for inference

@@ -1,16 +1,19 @@
+import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tensordex_mobile/tflite/ml_isolate.dart';
+import 'package:tensordex_mobile/tflite/model/configuration.dart';
+import 'package:tensordex_mobile/tflite/model/outputs/stats.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../tflite/classifier.dart';
+import '../tflite/model/outputs/recognition.dart';
 import '../utils/logger.dart';
-import '../tflite/data/recognition.dart';
-import '../tflite/data/stats.dart';
 
-/// [PokeFinder] sends each frame for inference
+
 class PokeFinder extends StatefulWidget {
   /// Callback to pass results after inference to [HomeView]
   final Function(List<Recognition> recognitions) resultsCallback;
@@ -28,17 +31,20 @@ class PokeFinder extends StatefulWidget {
 }
 
 class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
-  late List<CameraDescription> cameras;
-  late CameraController cameraController;
-  late MLIsolate _mlIsolate;
-
   /// true when inference is ongoing
   bool predicting = false;
   bool _cameraInitialized = false;
   bool _classifierInitialized = false;
 
+  //cameras
+  late List<CameraDescription> cameras;
+  late CameraController cameraController;
+
+  //ml variables
   late Interpreter interpreter;
   late Classifier classifier;
+  late MLIsolate _mlIsolate;
+  late List<ModelConfiguration> modelConfigurations;
 
   @override
   void initState() {
@@ -55,19 +61,34 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
     predicting = false;
   }
 
+  Future<List<String>> getModelFiles() async {
+    final manifestContent = await rootBundle.loadString('AssetManifest.jsn');
+    final Map<String, dynamic> manifestMap = json.decode(manifestContent);
+    return manifestMap.keys
+        .where((String key) => key.contains('.tflite'))
+        .map((String key) => key.substring(7))
+        .toList();
+  }
+
   void initializeModel() async {
-    var interpreterOptions = InterpreterOptions()..threads = 8;
-    interpreter = await Interpreter.fromAsset('efficientnet_v2s.tflite',
-        options: interpreterOptions);
-    classifier = Classifier(interpreter: interpreter);
+    var modelFiles = await getModelFiles();
+    var modelConfigurations =
+        modelFiles.map((e) => ModelConfiguration(e)).toList();
+    var currentConfig = modelConfigurations[0];
+    logger.i(modelFiles);
+    interpreter = await createInterpreter(currentConfig);
+    classifier = Classifier(interpreter);
     _classifierInitialized = true;
+  }
+
+  Future<Interpreter> createInterpreter(ModelConfiguration config) async {
+    return await Interpreter.fromAsset(config.name,
+        options: config.interpreters[0]);
   }
 
   /// Initializes the camera by setting [cameraController]
   void initializeCamera() async {
     cameras = await availableCameras();
-
-    // cameras[0] for rear-camera
     cameraController =
         CameraController(cameras[0], ResolutionPreset.low, enableAudio: false);
 
@@ -94,11 +115,11 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
       var results = await inference(MLIsolateData(
           cameraImage, classifier.interpreter.address, classifier.labels));
 
-      if (results.containsKey("recognitions")) {
-        widget.resultsCallback(results["recognitions"]);
+      if (results.containsKey('recognitions')) {
+        widget.resultsCallback(results['recognitions']);
       }
-      if (results.containsKey("stats")) {
-        widget.statsCallback(results["stats"]);
+      if (results.containsKey('stats')) {
+        widget.statsCallback(results['stats']);
       }
       logger.i(results);
 

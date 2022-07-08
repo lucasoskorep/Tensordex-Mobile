@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:tensordex_mobile/tflite/model/outputs/recognition.dart';
+import 'package:tensordex_mobile/tflite/model/outputs/stats.dart';
 import 'package:tensordex_mobile/widgets/poke_finder.dart';
 import 'package:tensordex_mobile/widgets/results.dart';
 
 import '../utils/logger.dart';
-import '../tflite/data/recognition.dart';
-import '../tflite/data/stats.dart';
 
 class TensordexHome extends StatefulWidget {
   const TensordexHome({Key? key, required this.title}) : super(key: key);
@@ -22,7 +22,7 @@ class TensordexHome extends StatefulWidget {
 
 class _TensordexHomeState extends State<TensordexHome> {
   /// Results from the image classifier
-  List<Recognition> results = [Recognition(1, "NOTHING DETECTED", .5)];
+  List<Recognition> results = [Recognition(1, 'NOTHING DETECTED', .5)];
   Stats stats = Stats();
 
   /// Scaffold Key
@@ -30,7 +30,7 @@ class _TensordexHomeState extends State<TensordexHome> {
 
   void _incrementCounter() {
     setState(() {
-      logger.d("Counter Incremented!");
+      logger.d('Counter Incremented!');
     });
   }
 

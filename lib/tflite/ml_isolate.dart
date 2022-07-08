@@ -11,7 +11,7 @@ class IsolateBase {
 }
 
 class MLIsolate extends IsolateBase {
-  static const String debugIsolate = "MLIsolate";
+  static const String debugIsolate = 'MLIsolate';
   late SendPort _sendPort;
 
   SendPort get sendPort => _sendPort;
@@ -34,19 +34,18 @@ class MLIsolate extends IsolateBase {
       var converted = ImageUtils.convertCameraImage(cameraImage);
       if (converted != null) {
         Classifier classifier = Classifier(
-            interpreter:
-                Interpreter.fromAddress(mlIsolateData.interpreterAddress),
+            Interpreter.fromAddress(mlIsolateData.interpreterAddress),
             labels: mlIsolateData.labels);
         var result = classifier.predict(converted);
         mlIsolateData.responsePort?.send(result);
       } else {
-        mlIsolateData.responsePort?.send({"response": "not working yet"});
+        mlIsolateData.responsePort?.send({'response': 'not working yet'});
       }
     }
   }
 }
 
-/// Bundles data to pass between Isolate
+/// Bundles outputs to pass between Isolate
 class MLIsolateData {
   CameraImage cameraImage;
   int interpreterAddress;

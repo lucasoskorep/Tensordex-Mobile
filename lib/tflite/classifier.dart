@@ -1,21 +1,23 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:image/image.dart' as image_lib;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
+import 'model/outputs/recognition.dart';
 import '../utils/logger.dart';
-import 'data/recognition.dart';
-import 'data/stats.dart';
+import 'model/outputs/stats.dart';
 
 /// Classifier
 class Classifier {
-  static const String modelFileName = "efficientnet_v2s.tflite";
+  static const String modelFileName = 'efficientnet_v2s.tflite';
   static const int inputSize = 224;
 
   /// [ImageProcessor] used to pre-process the image
   ImageProcessor? imageProcessor;
 
-  ///Tensor image to move image data into
+  ///Tensor image to move image outputs into
   late TensorImage _inputImage;
 
   /// Instance of Interpreter
@@ -30,55 +32,50 @@ class Classifier {
   late List<String> _labels;
   int classifierCreationStart = -1;
 
-  Classifier({
-    Interpreter? interpreter,
+  Classifier(
+    Interpreter interpreter, {
     List<String>? labels,
   }) {
-    loadModel(interpreter: interpreter);
+    loadModel(interpreter);
     loadLabels(labels: labels);
   }
 
   /// Loads interpreter from asset
-  void loadModel({Interpreter? interpreter}) async {
+  void loadModel(Interpreter interpreter) async {
     try {
-      _interpreter = interpreter ??
-          await Interpreter.fromAsset(
-            modelFileName,
-            options: InterpreterOptions()..threads = 8,
-          );
+      _interpreter = interpreter;
       var outputTensor = _interpreter.getOutputTensor(0);
       var outputShape = outputTensor.shape;
       _outputType = outputTensor.type;
       var inputTensor = _interpreter.getInputTensor(0);
-      // var intputShape = inputTensor.shape;
       _inputType = inputTensor.type;
       _inputImage = TensorImage(_inputType);
       _outputBuffer = TensorBuffer.createFixedSize(outputShape, _outputType);
       _outputProcessor =
           TensorProcessorBuilder().add(NormalizeOp(0, 1)).build();
     } catch (e) {
-      logger.e("Error while creating interpreter: ", e);
+      logger.e('Error while creating interpreter: ', e);
     }
   }
 
   /// Loads labels from assets
   void loadLabels({List<String>? labels}) async {
     try {
-      _labels = labels ?? await FileUtil.loadLabels("assets/labels.txt");
+      _labels = labels ?? await FileUtil.loadLabels('assets/labels.txt');
     } catch (e) {
-      logger.e("Error while loading labels: $e");
+      logger.e('Error while loading labels: $e');
     }
   }
 
   /// Pre-process the image
   TensorImage? getProcessedImage(TensorImage? inputImage) {
-    // padSize = max(inputImage.height, inputImage.width);
+    int cropSize = min(_inputImage.height, _inputImage.width);
     if (inputImage != null) {
       imageProcessor ??= ImageProcessorBuilder()
-          .add(ResizeWithCropOrPadOp(224, 224))
+          .add(ResizeWithCropOrPadOp(cropSize, cropSize))
           .add(ResizeOp(inputSize, inputSize, ResizeMethod.BILINEAR))
           .add(NormalizeOp(0, 1))
-          // .add(NormalizeOp(127.5, 127.5))
+          // .add(NormalizeOp(127.5, 127.5)) // photo vs quant normalization
           .build();
       return imageProcessor?.process(inputImage);
     }
@@ -102,8 +99,8 @@ class Classifier {
         .toList();
     var endTime = DateTime.now().millisecondsSinceEpoch;
     return {
-      "recognitions": predictions,
-      "stats": Stats(
+      'recognitions': predictions,
+      'stats': Stats(
         totalTime: endTime - preProcStart,
         preProcessingTime: inferenceStart - preProcStart,
         inferenceTime: postProcStart - inferenceStart,
