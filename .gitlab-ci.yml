@@ -14,34 +14,35 @@
 # For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
 
 stages:          # List of stages for jobs, and their order of execution
-  - build
+  - lint
   - test
+  - build
   - deploy
 
-build-job:       # This job runs in the build stage, which runs first.
-  stage: build
+before_script:
+  - flutter pub get
+  - flutter clean
+
+linting-code:   # This job runs in the test stage.
+  stage: lint    # It only starts when the job in the build stage completes successfully.
   script:
-    - echo "Compiling the code..."
-    - echo "Compile complete."
+    - flutter analyze --no-fatal-infos --no-fatal-warnings
   tags:
     - MacOS
 
-unit-test-job:   # This job runs in the test stage.
+unit-tests:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   script:
-    - echo "Running unit tests... This will take about 60 seconds."
-    - sleep 60
-    - echo "Code coverage is 90%"
+    - flutter test
   tags:
     - MacOS
 
-
-lint-test-job:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
+build-debug:
+  stage: build
+  only:
+    - branches
   script:
-    - echo "Linting code... This will take about 10 seconds."
-    - sleep 10
-    - echo "No lint issues found."
+    - flutter build appbundle --debug
   tags:
     - MacOS
 
@@ -49,6 +50,6 @@ deploy-job:      # This job runs in the deploy stage.
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
   script:
     - echo "Deploying application..."
-    - echo "Application successfully deployed."
+    - echo "Application successfully deployed. (JK gotta implement this sometime)"
   tags:
     - MacOS
