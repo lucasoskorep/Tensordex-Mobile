@@ -62,7 +62,7 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
   }
 
   Future<List<String>> getModelFiles() async {
-    final manifestContent = await rootBundle.loadString('AssetManifest.jsn');
+    final manifestContent = await rootBundle.loadString('AssetManifest.json');
     final Map<String, dynamic> manifestMap = json.decode(manifestContent);
     return manifestMap.keys
         .where((String key) => key.contains('.tflite'))
