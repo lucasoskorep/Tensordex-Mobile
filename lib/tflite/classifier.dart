@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:image/image.dart' as image_lib;
+import 'package:path_provider/path_provider.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
@@ -31,6 +33,7 @@ class Classifier {
   /// Labels file loaded as list
   late List<String> _labels;
   int classifierCreationStart = -1;
+  bool _shouldReturnFrame = false;
 
   Classifier(
     Interpreter interpreter, {
@@ -67,6 +70,10 @@ class Classifier {
     }
   }
 
+  void setReturnFrame(bool returnFrame) {
+    _shouldReturnFrame = returnFrame;
+  }
+
   /// Pre-process the image
   TensorImage? getProcessedImage(TensorImage? inputImage) {
     int cropSize = min(_inputImage.height, _inputImage.width);
@@ -83,12 +90,14 @@ class Classifier {
   }
 
   /// Runs object detection on the input image
-  Map<String, dynamic>? predict(image_lib.Image image) {
+  Future<Map<String, dynamic>?> predict(image_lib.Image image) async {
     var preProcStart = DateTime.now().millisecondsSinceEpoch;
-    _inputImage.loadImage(image);
+    _inputImage.loadImage(image_lib.copyRotate(image, 90));
     _inputImage = getProcessedImage(_inputImage)!;
+
+
     var inferenceStart = DateTime.now().millisecondsSinceEpoch;
-    _interpreter.run(_inputImage.buffer, _outputBuffer.getBuffer());
+        _interpreter.run(_inputImage.buffer, _outputBuffer.getBuffer());
     var postProcStart = DateTime.now().millisecondsSinceEpoch;
     Map<String, double> labeledProb =
         TensorLabel.fromList(labels, _outputProcessor.process(_outputBuffer))
@@ -106,6 +115,7 @@ class Classifier {
         inferenceTime: postProcStart - inferenceStart,
         postProcessingTime: endTime - postProcStart,
       ),
+      'image': _shouldReturnFrame? _inputImage.image : null,
     };
   }
 

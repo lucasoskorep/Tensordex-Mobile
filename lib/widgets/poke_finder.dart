@@ -1,18 +1,20 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:isolate';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:tensordex_mobile/tflite/ml_isolate.dart';
 import 'package:tensordex_mobile/tflite/model/configuration.dart';
 import 'package:tensordex_mobile/tflite/model/outputs/stats.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
+import '../main.dart';
 import '../tflite/classifier.dart';
 import '../tflite/model/outputs/recognition.dart';
 import '../utils/logger.dart';
-
 
 class PokeFinder extends StatefulWidget {
   /// Callback to pass results after inference to [HomeView]
@@ -35,9 +37,9 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
   bool predicting = false;
   bool _cameraInitialized = false;
   bool _classifierInitialized = false;
+  bool _saveClassifierImage = false;
+  int cameraIndex = 0;
 
-  //cameras
-  late List<CameraDescription> cameras;
   late CameraController cameraController;
 
   //ml variables
@@ -56,7 +58,10 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _mlIsolate = MLIsolate();
     await _mlIsolate.start();
-    initializeCamera();
+    swapToCamera(cameras[0]);
+    for (CameraDescription cam in cameras) {
+      logger.i(cam);
+    }
     initializeModel();
     predicting = false;
   }
@@ -86,16 +91,12 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
         options: config.interpreters[0]);
   }
 
-  /// Initializes the camera by setting [cameraController]
-  void initializeCamera() async {
-    cameras = await availableCameras();
-    cameraController =
-        CameraController(cameras[0], ResolutionPreset.low, enableAudio: false);
-
+  void swapToCamera(CameraDescription cameraDescription) async {
+    cameraController = CameraController(cameraDescription, ResolutionPreset.low,
+        enableAudio: false);
     cameraController.initialize().then((_) async {
       /// previewSize is size of each image frame captured by controller
       /// 352x288 on iOS, 240p (320x240) on Android with ResolutionPreset.low
-      // Stream of image passed to [onLatestImageAvailable] callback
       await cameraController.startImageStream(onLatestImageAvailable);
       setState(() {
         _cameraInitialized = true;
@@ -112,8 +113,12 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
       setState(() {
         predicting = true;
       });
+      logger.i(_saveClassifierImage);
       var results = await inference(MLIsolateData(
-          cameraImage, classifier.interpreter.address, classifier.labels));
+          cameraImage,
+          classifier.interpreter.address,
+          classifier.labels,
+          _saveClassifierImage));
 
       if (results.containsKey('recognitions')) {
         widget.resultsCallback(results['recognitions']);
@@ -121,12 +126,43 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
       if (results.containsKey('stats')) {
         widget.statsCallback(results['stats']);
       }
-      logger.i(results);
-
+      if (results.containsKey('image')) {
+        var image = results['image'];
+        if (image != null) {
+          Directory tempDir = await getTemporaryDirectory();
+          String tempPath = tempDir.path;
+          logger.i(tempPath);
+          logger.i('SAVING IMAGE!');
+          await File('$tempPath/${DateTime.now().millisecondsSinceEpoch}.png')
+              .writeAsBytes(encodePng(image));
+          _saveClassifierImage = false;
+        }
+      }
       setState(() {
         predicting = false;
       });
     }
+  }
+
+  void swapCamera() async {
+    logger.i(cameras);
+    logger.i(cameraIndex);
+    cameraIndex += 1;
+    if (cameras.length <= cameraIndex) {
+      cameraIndex = 0;
+    }
+    swapToCamera(cameras[cameraIndex]);
+  }
+
+  void saveMLImage() async {
+    logger.i('setting save classifier to true');
+    _saveClassifierImage = true;
+  }
+
+  void setZoom() async {
+    logger.i(await cameraController.getMinZoomLevel());
+    logger.i(await cameraController.getMaxZoomLevel());
+    logger.i(cameraController.setZoomLevel(2.0));
   }
 
   @override
@@ -135,9 +171,17 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
     if (!_cameraInitialized) {
       return Container();
     }
-    return AspectRatio(
-        aspectRatio: 1 / cameraController.value.aspectRatio,
-        child: CameraPreview(cameraController));
+    return Column(
+      children: [
+        AspectRatio(
+            aspectRatio: 1 / cameraController.value.aspectRatio,
+            child: CameraPreview(cameraController)),
+        TextButton(onPressed: swapCamera, child: const Text('Change Camera!')),
+        TextButton(
+            onPressed: saveMLImage, child: const Text('Save Model Image')),
+        TextButton(onPressed: setZoom, child: const Text('Zoom!'))
+      ],
+    );
   }
 
   /// Runs inference in another isolate

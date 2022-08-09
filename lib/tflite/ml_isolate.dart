@@ -5,6 +5,7 @@ import 'package:tensordex_mobile/tflite/classifier.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../utils/image_utils.dart';
+import '../utils/logger.dart';
 
 class IsolateBase {
   final ReceivePort _receivePort = ReceivePort();
@@ -25,6 +26,7 @@ class MLIsolate extends IsolateBase {
     _sendPort = await _receivePort.first;
   }
 
+
   static void entryPoint(SendPort sendPort) async {
     final port = ReceivePort();
     sendPort.send(port.sendPort);
@@ -33,10 +35,15 @@ class MLIsolate extends IsolateBase {
       var cameraImage = mlIsolateData.cameraImage;
       var converted = ImageUtils.convertCameraImage(cameraImage);
       if (converted != null) {
-        Classifier classifier = Classifier(
+        var classifier = Classifier(
             Interpreter.fromAddress(mlIsolateData.interpreterAddress),
             labels: mlIsolateData.labels);
-        var result = classifier.predict(converted);
+        if (classifier.interpreter.address !=
+            mlIsolateData.interpreterAddress) {
+          logger.e('INTERPRETER ADDRESS MISMATCH!');
+        }
+        classifier.setReturnFrame(mlIsolateData.shouldSaveFrame);
+        var result = await classifier.predict(converted);
         mlIsolateData.responsePort?.send(result);
       } else {
         mlIsolateData.responsePort?.send({'response': 'not working yet'});
@@ -49,6 +56,7 @@ class MLIsolate extends IsolateBase {
 class MLIsolateData {
   CameraImage cameraImage;
   int interpreterAddress;
+  bool shouldSaveFrame;
   List<String> labels;
   SendPort? responsePort;
 
@@ -56,5 +64,6 @@ class MLIsolateData {
     this.cameraImage,
     this.interpreterAddress,
     this.labels,
+    this.shouldSaveFrame,
   );
 }
