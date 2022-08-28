@@ -23,19 +23,23 @@ packages:
     source: hosted
     version: "2.1.0"
   camera:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
-      name: camera
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.9.8+1"
+      path: "packages/camera/camera"
+      ref: "feat/allowCameraZoomToUseAllPhysicalCameras"
+      resolved-ref: b0e1ea90690923b859b467ccd6f40a77e7347e0b
+      url: "https://github.com/lucasoskorep/plugins.git"
+    source: git
+    version: "0.10.0"
   camera_android:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: camera_android
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.9.8+3"
+      path: "packages/camera/camera_android"
+      ref: "feat/allowCameraZoomToUseAllPhysicalCameras"
+      resolved-ref: b0e1ea90690923b859b467ccd6f40a77e7347e0b
+      url: "https://github.com/lucasoskorep/plugins.git"
+    source: git
+    version: "0.10.0+1"
   camera_avfoundation:
     dependency: transitive
     description:
@@ -56,7 +60,7 @@ packages:
       name: camera_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.1+6"
+    version: "0.3.0"
   characters:
     dependency: transitive
     description:
@@ -358,12 +362,14 @@ packages:
     source: hosted
     version: "0.9.0"
   tflite_flutter_helper:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
-      name: tflite_flutter_helper
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.3.1"
+      path: "."
+      ref: master
+      resolved-ref: "0b49c8861b3d7a3e5ad97ba144bbc0e74b15eb5f"
+      url: "https://github.com/lucasoskorep/tflite_flutter_helper.git"
+    source: git
+    version: "0.3.0"
   tuple:
     dependency: transitive
     description:

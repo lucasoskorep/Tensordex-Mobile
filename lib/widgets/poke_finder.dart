@@ -162,7 +162,9 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
   void setZoom() async {
     logger.i(await cameraController.getMinZoomLevel());
     logger.i(await cameraController.getMaxZoomLevel());
-    logger.i(cameraController.setZoomLevel(2.0));
+    logger.i(cameraController.getMinZoomLevel());
+    logger.i(cameraController.getMaxZoomLevel());
+    logger.i(cameraController.setZoomLevel(0.7));
   }
 
   @override
