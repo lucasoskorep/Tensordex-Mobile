@@ -30,6 +30,10 @@ build-debug:
   script:
     - sh install_tflite.sh -d
     - flutter build appbundle --debug
+  artifacts:
+    name: android-debug-abb
+    paths:
+      - build/app/outputs/bundle/debug/app-debug.aab
   tags:
     - MacOS
 
