@@ -23,24 +23,43 @@ unit-tests:
     - MacOS
 
 
-build-debug:
+build-android-debug:
   stage: build
   only:
     - branches
   script:
     - sh install_tflite.sh -d
     - flutter build appbundle --debug
+    - flutter build appbundle --debug
   artifacts:
-    name: android-debug-abb
+    name: android-debug
     paths:
       - build/app/outputs/bundle/debug/app-debug.aab
+      - build/app/outputs/flutter-apk/app-release.apk
   tags:
     - MacOS
 
-deploy-job:
+
+deploy-android-job:
   stage: deploy
   script:
     - echo "Deploying application..."
     - echo "Application successfully deployed. (JK gotta implement this sometime)"
+  tags:
+    - MacOS
+
+
+build-ios-debug:
+  stage: build
+  only:
+    - branches
+  script:
+    - sh install_tflite.sh -d
+    - flutter build ipa
+#  artifacts:
+#    name: ios-debug
+#    paths:
+#      - build/app/outputs/bundle/debug/app-debug.aab
+#      - build/app/outputs/flutter-apk/app-release.apk
   tags:
     - MacOS
