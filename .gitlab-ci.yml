@@ -22,11 +22,13 @@ unit-tests:
   tags:
     - MacOS
 
+
 build-debug:
   stage: build
   only:
     - branches
   script:
+    - sh install_tflite.sh -d
     - flutter build appbundle --debug
   tags:
     - MacOS
