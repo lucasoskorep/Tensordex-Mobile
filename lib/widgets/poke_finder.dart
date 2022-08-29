@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,11 +35,17 @@ class PokeFinder extends StatefulWidget {
 
 class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
   /// true when inference is ongoing
+  ///
+  final double _zoomSliderLogFactor = 1000.0;
+
   bool predicting = false;
-  bool _cameraInitialized = false;
+  bool _cameraReady = false;
   bool _classifierInitialized = false;
   bool _saveClassifierImage = false;
-  int cameraIndex = 0;
+  int _cameraIndex = 0;
+  double _minZoom = 1.0;
+  double _maxZoom = 1.0;
+  double _currentZoom = 1.0;
 
   late CameraController cameraController;
 
@@ -91,17 +98,39 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
         options: config.interpreters[0]);
   }
 
+  void swapCamera() async {
+    logger.i(cameras);
+    logger.i(_cameraIndex);
+    _cameraIndex += 1;
+    if (cameras.length <= _cameraIndex) {
+      _cameraIndex = 0;
+    }
+    swapToCamera(cameras[_cameraIndex]);
+  }
+
   void swapToCamera(CameraDescription cameraDescription) async {
+    setState(() {
+      _cameraReady = false;
+    });
+    _refreshIndicatorKey.currentState?.show();
     cameraController = CameraController(cameraDescription, ResolutionPreset.low,
         enableAudio: false);
     cameraController.initialize().then((_) async {
       /// previewSize is size of each image frame captured by controller
       /// 352x288 on iOS, 240p (320x240) on Android with ResolutionPreset.low
       await cameraController.startImageStream(onLatestImageAvailable);
+      _maxZoom = await cameraController.getMaxZoomLevel();
+      _minZoom = await cameraController.getMinZoomLevel();
       setState(() {
-        _cameraInitialized = true;
+        _cameraReady = true;
+        _currentZoom = 1.0;
       });
     });
+  }
+
+  void saveMLImage() async {
+    logger.i('setting save classifier to true');
+    _saveClassifierImage = true;
   }
 
   /// Callback to receive each frame [CameraImage] perform inference on it
@@ -144,44 +173,66 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
     }
   }
 
-  void swapCamera() async {
-    logger.i(cameras);
-    logger.i(cameraIndex);
-    cameraIndex += 1;
-    if (cameras.length <= cameraIndex) {
-      cameraIndex = 0;
-    }
-    swapToCamera(cameras[cameraIndex]);
-  }
-
-  void saveMLImage() async {
-    logger.i('setting save classifier to true');
-    _saveClassifierImage = true;
-  }
-
-  void setZoom() async {
-    logger.i(await cameraController.getMinZoomLevel());
-    logger.i(await cameraController.getMaxZoomLevel());
-    logger.i(cameraController.getMinZoomLevel());
-    logger.i(cameraController.getMaxZoomLevel());
-    logger.i(cameraController.setZoomLevel(0.7));
-  }
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   @override
   Widget build(BuildContext context) {
-    // Return empty container while the camera is not initialized
-    if (!_cameraInitialized) {
-      return Container();
-    }
     return Column(
       children: [
-        AspectRatio(
-            aspectRatio: 1 / cameraController.value.aspectRatio,
-            child: CameraPreview(cameraController)),
-        TextButton(onPressed: swapCamera, child: const Text('Change Camera!')),
+        RefreshIndicator(
+            key: _refreshIndicatorKey,
+            onRefresh: () async {
+              // Replace this delay with the code to be executed during refresh
+              // and return a Future when code finishes execution.
+              while (!_cameraReady) {
+                await Future.delayed(const Duration(milliseconds: 100));
+              }
+              return;
+            },
+            child: !_cameraReady? Container(width: 100, height: 100,): Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  AspectRatio(
+                      aspectRatio: 1 / cameraController.value.aspectRatio,
+                      child: CameraPreview(cameraController)),
+                  Positioned(
+                    top: -10,
+                    child: TextButton(
+                        onPressed: swapCamera,
+                        child: const Text('Change Camera!')),
+                  ),
+                  Positioned(
+                      bottom: -10,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                              width: MediaQuery.of(context).size.width - 100,
+                              child: Slider(
+                                  min: pow(_minZoom, 1 / _zoomSliderLogFactor)
+                                      .toDouble(),
+                                  max: pow(_maxZoom, 1 / _zoomSliderLogFactor)
+                                      .toDouble(),
+                                  divisions: 100,
+                                  value: _currentZoom,
+                                  onChanged: (double value) {
+                                    logger.i('Zoom updated $value');
+                                    _currentZoom = value;
+                                    cameraController.setZoomLevel(
+                                        pow(_currentZoom, _zoomSliderLogFactor)
+                                            .toDouble());
+                                  })),
+                          Text(
+                              pow(_currentZoom, _zoomSliderLogFactor)
+                                  .toStringAsFixed(2),
+                              style: const TextStyle(color: Colors.lightBlue))
+                          // style: const TextStyle(color: Colors.lightBlue))
+                        ],
+                      ))
+                ])),
         TextButton(
             onPressed: saveMLImage, child: const Text('Save Model Image')),
-        TextButton(onPressed: setZoom, child: const Text('Zoom!'))
       ],
     );
   }
@@ -203,6 +254,7 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
         break;
       case AppLifecycleState.resumed:
         if (!cameraController.value.isStreamingImages) {
+          swapToCamera(cameras[_cameraIndex]);
           await cameraController.startImageStream(onLatestImageAvailable);
         }
         break;

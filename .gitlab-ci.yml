@@ -49,17 +49,17 @@ deploy-android-job:
     - MacOS
 
 
-build-ios-debug:
-  stage: build
-  only:
-    - branches
-  script:
-    - sh install_tflite.sh -d
-    - flutter build ipa
-#  artifacts:
-#    name: ios-debug
-#    paths:
-#      - build/app/outputs/bundle/debug/app-debug.aab
-#      - build/app/outputs/flutter-apk/app-release.apk
-  tags:
-    - MacOS
+#build-ios-debug:
+#  stage: build
+#  only:
+#    - branches
+#  script:
+#    - sh install_tflite.sh -d
+#    - flutter build ipa
+##  artifacts:
+##    name: ios-debug
+##    paths:
+##      - build/app/outputs/bundle/debug/app-debug.aab
+##      - build/app/outputs/flutter-apk/app-release.apk
+#  tags:
+#    - MacOS

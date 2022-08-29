@@ -24,6 +24,7 @@ class _TensordexHomeState extends State<TensordexHome> {
   /// Results from the image classifier
   List<Recognition> results = [Recognition(1, 'NOTHING DETECTED', .5)];
   Stats stats = Stats();
+  int _selectedNavBarIndex = 0;
 
   /// Scaffold Key
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
@@ -58,60 +59,111 @@ class _TensordexHomeState extends State<TensordexHome> {
     });
   }
 
+  void _onNavBarTapped(int index) {
+    setState(() {
+      _selectedNavBarIndex = index;
+    });
+  }
+
+  static const TextStyle optionStyle =
+      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _widgetOptions = <Widget>[
+      Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          PokeFinder(
+              resultsCallback: resultsCallback, statsCallback: statsCallback),
+          Results(results, stats),
+        ],
+      ),
+      const Text(
+        'Index 1: Seen',
+        style: optionStyle,
+      ),
+      const Text(
+        'Index 2: About',
+        style: optionStyle,
+      ),
+      const Text(
+        'Index 3: Settings',
+        style: optionStyle,
+      ),
+    ];
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
-        drawer: Drawer(
-          child: ListView(
-            // Important: Remove any padding from the ListView.
-            padding: EdgeInsets.zero,
-            children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                ),
-                child: Text('Drawer Header'),
-              ),
-              ListTile(
-                title: const Text('Item 1'),
-                onTap: () {
-                  // Update the state of the app.
-                  // ...
-                },
-              ),
-              ListTile(
-                title: const Text('Item 2'),
-                onTap: () {
-                  // Update the state of the app.
-                  // ...
-                },
-              ),
-            ],
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      // drawer: Drawer(
+      //   child: ListView(
+      //     // Important: Remove any padding from the ListView.
+      //     padding: EdgeInsets.zero,
+      //     children: [
+      //       const DrawerHeader(
+      //         decoration: BoxDecoration(
+      //           color: Colors.blue,
+      //         ),
+      //         child: Text('Drawer Header'),
+      //       ),
+      //       ListTile(
+      //         title: const Text('Item 1'),
+      //         onTap: () {
+      //           // Update the state of the app.
+      //           // ...
+      //         },
+      //       ),
+      //       ListTile(
+      //         title: const Text('Item 2'),
+      //         onTap: () {
+      //           // Update the state of the app.
+      //           // ...
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedNavBarIndex),
+      ),
+      floatingActionButton: GestureDetector(
+        onLongPress: () {
+          _incrementCounter();
+        },
+        child: FloatingActionButton(
+          onPressed: _incrementCounter,
+          tooltip: 'Increment',
+          child: const Icon(Icons.photo_camera),
+        ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.lightBlue,
+        type: BottomNavigationBarType.shifting,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.camera),
+            label: 'Camera',
+            backgroundColor: Colors.lightBlue,
           ),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              PokeFinder(
-                  resultsCallback: resultsCallback,
-                  statsCallback: statsCallback),
-              Results(results, stats),
-            ],
+          BottomNavigationBarItem(
+              icon: Icon(Icons.call),
+              label: 'Calls',
+              backgroundColor: Colors.deepOrange),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat),
+              label: 'Chats',
+              backgroundColor: Colors.red),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+            backgroundColor: Colors.purple,
           ),
-        ),
-        floatingActionButton: GestureDetector(
-          onLongPress: () {
-            _incrementCounter();
-          },
-          child: FloatingActionButton(
-            onPressed: _incrementCounter,
-            tooltip: 'Increment',
-            child: const Icon(Icons.photo_camera),
-          ), // This trailing comma makes auto-formatting nicer for build methods.
-        ));
+        ],
+        currentIndex: _selectedNavBarIndex,
+        selectedItemColor: Colors.amber,
+        onTap: _onNavBarTapped,
+      ),
+    );
   }
 }
