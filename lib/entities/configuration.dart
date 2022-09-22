@@ -1,5 +1,5 @@
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'constants.dart';
+import '../constants/ml_constants.dart';
 
 class ModelConfiguration{
   String name;

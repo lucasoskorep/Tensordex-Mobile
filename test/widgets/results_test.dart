@@ -8,8 +8,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tensordex_mobile/tflite/model/outputs/recognition.dart';
-import 'package:tensordex_mobile/tflite/model/outputs/stats.dart';
+import 'package:tensordex_mobile/entities/recognition.dart';
+import 'package:tensordex_mobile/entities/stats.dart';
 import 'package:tensordex_mobile/widgets/results.dart';
 
 import '../widget_test_app.dart';

@@ -8,13 +8,14 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tensordex_mobile/tflite/ml_isolate.dart';
-import 'package:tensordex_mobile/tflite/model/configuration.dart';
-import 'package:tensordex_mobile/tflite/model/outputs/stats.dart';
+import 'package:tensordex_mobile/entities/configuration.dart';
+import 'package:tensordex_mobile/entities/stats.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../main.dart';
-import '../tflite/classifier.dart';
-import '../tflite/model/outputs/recognition.dart';
+import '../services/classifier/classifier.dart';
+import '../entities/recognition.dart';
+import '../services/classifier/nn_classifier.dart';
 import '../utils/logger.dart';
 
 class PokeFinder extends StatefulWidget {
@@ -89,7 +90,7 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
     var currentConfig = modelConfigurations[0];
     logger.i(modelFiles);
     interpreter = await createInterpreter(currentConfig);
-    classifier = Classifier(interpreter);
+    classifier = NeuralNetworkClassifier(interpreter);
     _classifierInitialized = true;
   }
 

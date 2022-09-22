@@ -1,7 +1,7 @@
 import 'dart:isolate';
 
 import 'package:camera/camera.dart';
-import 'package:tensordex_mobile/tflite/classifier.dart';
+import 'package:tensordex_mobile/services/classifier/classifier.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../utils/image_utils.dart';

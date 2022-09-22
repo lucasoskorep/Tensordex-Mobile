@@ -39,6 +39,7 @@ dependencies:
   path_provider: ^2.0.11
   tflite_flutter: ^0.9.0
   collection: ^1.16.0
+  get_it: ^7.2.0
 
 dev_dependencies:
   flutter_test:

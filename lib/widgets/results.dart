@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tensordex_mobile/widgets/poke_finder.dart';
-import '../tflite/model/outputs/recognition.dart';
-import '../tflite/model/outputs/stats.dart';
+import '../entities/recognition.dart';
+import '../entities/stats.dart';
 
 /// [PokeFinder] sends each frame for inference
 class Results extends StatefulWidget {

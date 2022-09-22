@@ -3,16 +3,16 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:image/image.dart' as image_lib;
-import 'package:path_provider/path_provider.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
-import 'model/outputs/recognition.dart';
-import '../utils/logger.dart';
-import 'model/outputs/stats.dart';
+import '../../entities/recognition.dart';
+import '../../utils/logger.dart';
+import '../../entities/stats.dart';
+import 'classifier.dart';
 
 /// Classifier
-class Classifier {
+class NeuralNetworkClassifier implements Classifier{
   static const String modelFileName = 'efficientnet_v2s.tflite';
   static const int inputSize = 224;
 
@@ -23,28 +23,25 @@ class Classifier {
   late TensorImage _inputImage;
 
   /// Instance of Interpreter
-  late Interpreter _interpreter;
   late TensorBuffer _outputBuffer;
   late TfLiteType _inputType;
   late TfLiteType _outputType;
 
   late SequentialProcessor<TensorBuffer> _outputProcessor;
 
-  /// Labels file loaded as list
-  late List<String> _labels;
   int classifierCreationStart = -1;
   bool _shouldReturnFrame = false;
 
-  Classifier(
-    Interpreter interpreter, {
-    List<String>? labels,
-  }) {
+  NeuralNetworkClassifier(
+      Interpreter interpreter, {
+        List<String>? labels,
+      }) : super(interpreter, labels){
     loadModel(interpreter);
     loadLabels(labels: labels);
   }
 
-  /// Loads interpreter from asset
-  void loadModel(Interpreter interpreter) async {
+  @override
+  Future<Interpreter> loadModel(Interpreter interpreter) async {
     try {
       _interpreter = interpreter;
       var outputTensor = _interpreter.getOutputTensor(0);
@@ -59,15 +56,17 @@ class Classifier {
     } catch (e) {
       logger.e('Error while creating interpreter: ', e);
     }
+    return _interpreter;
   }
 
-  /// Loads labels from assets
-  void loadLabels({List<String>? labels}) async {
+  @override
+  Future<List<String>?> loadLabels({List<String>? labels}) async {
     try {
-      _labels = labels ?? await FileUtil.loadLabels('assets/labels.txt');
+      return labels ?? await FileUtil.loadLabels('assets/labels.txt');
     } catch (e) {
       logger.e('Error while loading labels: $e');
     }
+    return null;
   }
 
   void setReturnFrame(bool returnFrame) {
@@ -82,7 +81,7 @@ class Classifier {
           .add(ResizeWithCropOrPadOp(cropSize, cropSize))
           .add(ResizeOp(inputSize, inputSize, ResizeMethod.BILINEAR))
           .add(NormalizeOp(0, 1))
-          // .add(NormalizeOp(127.5, 127.5)) // photo vs quant normalization
+      // .add(NormalizeOp(127.5, 127.5)) // photo vs quant normalization
           .build();
       return imageProcessor?.process(inputImage);
     }
@@ -97,11 +96,11 @@ class Classifier {
 
 
     var inferenceStart = DateTime.now().millisecondsSinceEpoch;
-        _interpreter.run(_inputImage.buffer, _outputBuffer.getBuffer());
+    _interpreter.run(_inputImage.buffer, _outputBuffer.getBuffer());
     var postProcStart = DateTime.now().millisecondsSinceEpoch;
     Map<String, double> labeledProb =
-        TensorLabel.fromList(labels, _outputProcessor.process(_outputBuffer))
-            .getMapWithFloatValue();
+    TensorLabel.fromList(labels, _outputProcessor.process(_outputBuffer))
+        .getMapWithFloatValue();
     final predictions = getTopProbabilities(labeledProb, number: 5)
         .mapIndexed(
             (index, element) => Recognition(index, element.key, element.value))
