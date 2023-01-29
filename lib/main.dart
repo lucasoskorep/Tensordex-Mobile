@@ -1,14 +1,25 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get_it/get_it.dart';
+import 'package:tensordex_mobile/db/poke_storage_service.dart';
+import 'package:tensordex_mobile/hive.dart';
 import 'package:tensordex_mobile/widgets/tensordex_home.dart';
 import 'package:tensordex_mobile/utils/logger.dart';
 
+import 'di.dart';
+
 late List<CameraDescription> cameras;
 
+GetIt getIt = GetIt.instance;
+
 Future<void> main() async {
+  await setupHive();
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
+  setupGetIt();
+  getIt<PokeStorageService>().loadDefaultPokes();
+
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

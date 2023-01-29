@@ -47,3 +47,5 @@ app.*.map.json
 /android/app/release
 /assets/mobilenetv2_gpu.tflite
 /assets/mobilenetv2_gpu.tflite
+
+/android/app/src/main/jniLibs/

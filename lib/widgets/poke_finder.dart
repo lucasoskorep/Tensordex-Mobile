@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get_it/get_it.dart';
 import 'package:image/image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tensordex_mobile/tflite/ml_isolate.dart';
@@ -46,6 +47,7 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
   double _minZoom = 1.0;
   double _maxZoom = 1.0;
   double _currentZoom = 1.0;
+  GetIt getIt = GetIt.instance;
 
   late CameraController cameraController;
 
@@ -118,7 +120,7 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
     cameraController.initialize().then((_) async {
       /// previewSize is size of each image frame captured by controller
       /// 352x288 on iOS, 240p (320x240) on Android with ResolutionPreset.low
-      await cameraController.startImageStream(onLatestImageAvailable);
+      // await cameraController.startImageStream(onLatestImageAvailable);
       _maxZoom = await cameraController.getMaxZoomLevel();
       _minZoom = await cameraController.getMinZoomLevel();
       setState(() {
@@ -190,47 +192,62 @@ class _PokeFinderState extends State<PokeFinder> with WidgetsBindingObserver {
               }
               return;
             },
-            child: !_cameraReady? Container(width: 100, height: 100,): Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  AspectRatio(
-                      aspectRatio: 1 / cameraController.value.aspectRatio,
-                      child: CameraPreview(cameraController)),
-                  Positioned(
-                    top: -10,
-                    child: TextButton(
-                        onPressed: swapCamera,
-                        child: const Text('Change Camera!')),
-                  ),
-                  Positioned(
-                      bottom: -10,
-                      child: Row(
-                        children: [
-                          SizedBox(
-                              width: MediaQuery.of(context).size.width - 100,
-                              child: Slider(
-                                  min: pow(_minZoom, 1 / _zoomSliderLogFactor)
-                                      .toDouble(),
-                                  max: pow(_maxZoom, 1 / _zoomSliderLogFactor)
-                                      .toDouble(),
-                                  divisions: 100,
-                                  value: _currentZoom,
-                                  onChanged: (double value) {
-                                    logger.i('Zoom updated $value');
-                                    _currentZoom = value;
-                                    cameraController.setZoomLevel(
-                                        pow(_currentZoom, _zoomSliderLogFactor)
-                                            .toDouble());
-                                  })),
-                          Text(
-                              pow(_currentZoom, _zoomSliderLogFactor)
-                                  .toStringAsFixed(2),
-                              style: const TextStyle(color: Colors.lightBlue))
-                          // style: const TextStyle(color: Colors.lightBlue))
-                        ],
-                      ))
-                ])),
+            child:
+            !_cameraReady ?
+            Container(
+                    width: 100,
+                    height: 100,
+                  )
+                : Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                        AspectRatio(
+                            aspectRatio: 1 / cameraController.value.aspectRatio,
+                            child: CameraPreview(cameraController)),
+                        Positioned(
+                          top: -10,
+                          child: TextButton(
+                              onPressed: swapCamera,
+                              child: const Text('Change Camera!')),
+                        ),
+                        Positioned(
+                            bottom: -10,
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width - 100,
+                                    child: Slider(
+                                        min: pow(_minZoom,
+                                                1 / _zoomSliderLogFactor)
+                                            .toDouble(),
+                                        max: pow(_maxZoom,
+                                                1 / _zoomSliderLogFactor)
+                                            .toDouble(),
+                                        divisions: 100,
+                                        value: _currentZoom,
+                                        onChanged: (double value) {
+                                          var newValue =  pow(
+                                              _currentZoom,
+                                              _zoomSliderLogFactor)
+                                              .toDouble();
+                                          logger.i('Zoom updated $value $newValue');
+                                          _currentZoom = value;
+                                          cameraController.setZoomLevel(pow(
+                                          _currentZoom,
+                                          _zoomSliderLogFactor)
+                                              .toDouble());
+                                        })),
+                                Text(
+                                    pow(_currentZoom, _zoomSliderLogFactor)
+                                        .toStringAsFixed(2),
+                                    style: const TextStyle(
+                                        color: Colors.lightBlue))
+                                // style: const TextStyle(color: Colors.lightBlue))
+                              ],
+                            ))
+                      ])),
         TextButton(
             onPressed: saveMLImage, child: const Text('Save Model Image')),
       ],
