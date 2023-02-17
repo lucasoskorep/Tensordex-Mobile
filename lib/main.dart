@@ -49,7 +49,9 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.lightBlue,
       ),
-      home: const TensordexHome(title: 'Tensordex'),
+      home:
+      const TensordexHome(title: 'Tensordex'),
+      // const CameraExampleHome(),
     );
   }
 }
